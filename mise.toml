@@ -1,0 +1,25 @@
+[tools]
+python = "3.10"
+rust = "latest"
+
+[env]
+_.python.venv = { path = ".venv", create = true }
+
+[tasks.install]
+description = "Install all python dependencies and build rust webui"
+run = """
+pip install -r requirements.txt
+cd webui && cargo build
+"""
+
+[tasks.run-ui]
+description = "Run the Rust WebUI dashboard"
+run = """
+cd webui && cargo run
+"""
+
+[tasks.run-orchestrator]
+description = "Run the Multi-Agent Orchestrator (Example run)"
+run = """
+python multi_agent_hf_gemma4_args_with_gui.py --config gemma4_24gb_strict_vocab.json "Write a tiny websocket chat server" --webhook-url http://0.0.0.0:3123/api/hook
+"""

@@ -26,3 +26,8 @@ trace_output*/
 # OS
 .DS_Store
 Thumbs.db
+
+opik/*
+maos/*
+human-eval/*
+gemma4_try1_initial/*

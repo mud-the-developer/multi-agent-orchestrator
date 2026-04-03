@@ -14,28 +14,40 @@ This project features a multi-agent AI orchestration pipeline (using models like
 
 ---
 
+## 🚀 Easy Setup & Installation (using `mise`)
+
+This project provides unified setup for both Rust and Python using `mise` (a modern runtime executor).
+
+1. **Install mise** (if you don't have it):
+   ```bash
+   curl https://mise.run | sh
+   ```
+2. **Install tools & dependencies**:
+   ```bash
+   # This will automatically install python, rust, create a .venv, 
+   # install pip requirements, and compile the rust UI!
+   mise run install
+   ```
+
 ## 🚀 How to Run
 
 ### 1. Launch the Rust WebUI Backend
-The UI backend runs separately from the Python AI ecosystem. Because it actively monitors hardware, you will start it using `cargo`.
+The UI backend runs separately from the Python AI ecosystem. Because it actively monitors hardware, you will start it using `cargo` (or our mise wrapper).
 
 Open a fresh terminal:
 ```bash
-# Enter the WebUI folder
-cd webui/
-
-# Build and start the rust server
-cargo run
+mise run run-ui
 ```
 *The server will mount on `http://0.0.0.0:3123`.*
 *(Note: Requires a Linux system with active NVIDIA drivers for `nvml` GPU telemetry).*
 
 ### 2. Launch the Orchestrator Process 
-In a separate terminal, trigger your AI payload using the provided runner. The webhook configuration is baked-in as a default inside the arguments wrapper, so it will automatically begin pointing towards `127.0.0.1:3123`.
+In a separate terminal, trigger your AI payload using the provided runner. 
 
 ```bash
-# Example syntax using the strict vocab configuration:
-python multi_agent_hf_gemma4_args_with_gui.py --config gemma4_24gb_strict_vocab.json "Write a tiny websocket chat server" --webhook-url http://0.0.0.0:3123/api/hook
+# Example syntax using the strict vocab configuration via mise:
+mise run run-orchestrator
+# Or manually: python multi_agent_hf_gemma4_args_with_gui.py --config gemma4_24gb_strict_vocab.json "Write a tiny websocket chat server" --webhook-url http://0.0.0.0:3123/api/hook
 ```
 
 ### 3. Open the Dashboard

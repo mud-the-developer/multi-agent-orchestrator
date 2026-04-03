@@ -14,6 +14,20 @@
 
 ---
 
+## 🚀 통합 자동 셋업 (`mise` 활용)
+
+이 프로젝트는 `mise`를 통해 Python 가상현경과 Rust 빌드 환경을 한 번에 통합 세팅할 수 있도록 지원합니다.
+
+1. **mise 설치** (이미 설치되어 있다면 생략):
+   ```bash
+   curl https://mise.run | sh
+   ```
+2. **개발 환경 구축 (단일 명령어 실행)**:
+   ```bash
+   # 필요한 Python, Rust 버전을 설치하고 .venv 구성 및 의존성을 모두 자동 설치합니다.
+   mise run install
+   ```
+
 ## 🚀 실행 구동 가이드
 
 ### 1. Rust WebUI 백엔드 구동
@@ -21,21 +35,18 @@
 
 새로운 터미널을 열고 다음 명령어를 실행해주세요:
 ```bash
-# WebUI 폴더로 이동
-cd webui/
-
-# Rust 서버 빌드 및 실행
-cargo run
+mise run run-ui
 ```
 *웹 UI 서버는 `http://0.0.0.0:3123` 포트로 열립니다.*
 *(주의: 원활한 GPU 텔레메트리를 위해서는 NVIDIA 드라이버가 구동 중인 리눅스 운영체제를 권장합니다.)*
 
 ### 2. 오케스트레이터 프로세스 실행
-새로운 터미널 창을 하나 더 열어, AI 연산 및 에이전트 관리를 수행하는 뼈대 스크립트를 실행합니다. 다음과 같이 `--webhook-url` 파라미터를 넘겨주시면 자동으로 웹 대시보드와 통신이 시작됩니다.
+새로운 터미널 창을 하나 더 열어, AI 연산 및 에이전트 관리를 수행하는 뼈대 스크립트를 실행합니다. 
 
 ```bash
-# Strict Vocab (24GB VRAM 한정 세팅) 환경으로 웹소켓 서버를 작성하게 하는 예시:
-python multi_agent_hf_gemma4_args_with_gui.py --config gemma4_24gb_strict_vocab.json "Write a tiny websocket chat server" --webhook-url http://0.0.0.0:3123/api/hook
+# 구성된 mise 명령어로 편하게 테스트할 수 있습니다:
+mise run run-orchestrator
+# 혹은 직접 수동 실행: python multi_agent_hf_gemma4_args_with_gui.py --config gemma4_24gb_strict_vocab.json "Write a tiny websocket chat server" --webhook-url http://0.0.0.0:3123/api/hook
 ```
 
 ### 3. 브라우저 대시보드 접속
