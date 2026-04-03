@@ -26,6 +26,7 @@ This project provides unified setup for both Rust and Python using `mise` (a mod
    ```bash
    # This will automatically install python, rust, create a .venv, 
    # install pip requirements, and compile the rust UI!
+   mise trust
    mise run setup
    ```
 
