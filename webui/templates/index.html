@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Analytics Orchestrator</title>
+    <!-- Core External JS -->
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <script src="https://unpkg.com/htmx.org/dist/ext/sse.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Alpine.js & Mermaid.js & ApexCharts -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+    
+    <script>
+      mermaid.initialize({ startOnLoad: false, theme: 'dark' });
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            colors: {
+              background: '#0B0F19',
+              panel: '#1A2234',
+              primary: '#3B82F6',
+              accent: '#8B5CF6',
+              textPrimary: '#F1F5F9',
+              textSecondary: '#94A3B8'
+            }
+          }
+        }
+      }
+    </script>
+    <style>
+        body { background-color: #0B0F19; color: #F1F5F9; font-family: 'Inter', sans-serif; }
+        .glass-panel {
+            background: rgba(26, 34, 52, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-fade-in { animation: fadeIn 0.3s ease-out forwards; }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #475569; }
+        [x-cloak] { display: none !important; }
+        
+        /* ApexCharts dark tooltip hack */
+        .apexcharts-tooltip { background: #1A2234 !important; border-color: rgba(255,255,255,0.1) !important; color: #fff; }
+        .apexcharts-tooltip-title { background: #0B0F19 !important; border-bottom: 1px solid rgba(255,255,255,0.1) !important; }
+    </style>
+</head>
+<body class="h-screen w-full flex flex-col antialiased" x-data="{ activeTab: 'dashboard', totalTokens: 0, totalDuration: 0.0, stepCount: 0 }">
+    
+    <header class="h-16 border-b border-white/10 glass-panel shrink-0 flex items-center px-6 m-4 w-[calc(100%-2rem)] mx-auto sticky top-4 z-50">
+        <div class="flex items-center gap-3">
+            <div class="h-8 w-8 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center">
+                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+            </div>
+            <h1 class="text-xl font-bold tracking-tight mr-4">Orchestrator<span class="text-primary font-normal">Analytics</span></h1>
+            
+            <nav class="flex items-center space-x-1 pl-4 border-l border-white/10">
+                <button @click="activeTab = 'dashboard'" 
+                        :class="activeTab === 'dashboard' ? 'bg-white/10 text-white' : 'text-textSecondary hover:bg-white/5 hover:text-white'"
+                        class="px-3 py-1.5 rounded-lg text-sm font-medium transition-colors">
+                    Dashboard & Research
+                </button>
+                <button @click="activeTab = 'live'" 
+                        :class="activeTab === 'live' ? 'bg-white/10 text-white' : 'text-textSecondary hover:bg-white/5 hover:text-white'"
+                        class="px-3 py-1.5 rounded-lg text-sm font-medium transition-colors">
+                    Live Event Stream
+                </button>
+                <button @click="activeTab = 'protocol'; renderMermaidUI();" 
+                        :class="activeTab === 'protocol' ? 'bg-white/10 text-white' : 'text-textSecondary hover:bg-white/5 hover:text-white'"
+                        class="px-3 py-1.5 rounded-lg text-sm font-medium transition-colors">
+                    Protocol Flow
+                </button>
+            </nav>
+        </div>
+        
+        <div class="ml-auto flex items-center gap-4">
+            <button onclick="downloadCSV()" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded text-sm transition-colors shadow flex items-center gap-2">
+                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                Export CSV
+            </button>
+            <div class="flex items-center gap-2 border-l border-white/10 pl-4">
+                <span class="relative flex h-3 w-3">
+                  <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                  <span class="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+                </span>
+                <span class="text-xs text-textSecondary font-medium">Monitoring HW & LLMs</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Invisible background receiver for SSEs -->
+    <div hx-ext="sse" sse-connect="/stream" class="hidden">
+        <div id="sse-sink" sse-swap="message,llm_call,agent_step,system_stats" hx-swap="beforeend"></div>
+    </div>
+
+    <!-- Tab Content Area -->
+    <div class="flex-1 w-full max-w-[90rem] mx-auto p-4 flex flex-col gap-6 min-h-0 relative">
+        
+        <!-- Tab 1: DASHBOARD & HARDWARE TRACKING -->
+        <div x-show="activeTab === 'dashboard'" class="flex-1 overflow-y-auto pr-2 gap-6 flex flex-col min-h-0">
+            <!-- Key Metrics -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 shrink-0">
+                <div class="glass-panel p-6 flex flex-col">
+                    <span class="text-xs font-semibold text-textSecondary uppercase tracking-widest mb-1">Total Tokens Streamed</span>
+                    <span class="text-4xl font-bold text-accent font-mono" x-text="totalTokens">0</span>
+                </div>
+                <div class="glass-panel p-6 flex flex-col">
+                    <span class="text-xs font-semibold text-textSecondary uppercase tracking-widest mb-1">Accumulated LLM Inference Time</span>
+                    <span class="text-4xl font-bold text-green-400 font-mono"><span x-text="(totalDuration/1000).toFixed(1)">0.0</span> <span class="text-2xl text-green-400/50">sec</span></span>
+                </div>
+                <div class="glass-panel p-6 flex flex-col">
+                    <span class="text-xs font-semibold text-textSecondary uppercase tracking-widest mb-1">Total Agent Steps Executed</span>
+                    <span class="text-4xl font-bold text-primary font-mono" x-text="stepCount">0</span>
+                </div>
+            </div>
+
+            <!-- Plots Grid -->
+            <div class="grid grid-cols-1 gap-6 shrink-0 h-96">
+                <!-- VRAM & RAM Plot -->
+                <div class="glass-panel p-4 flex flex-col relative h-full">
+                    <h3 class="text-sm font-semibold text-textPrimary absolute top-4 left-4 z-10 uppercase tracking-widest">Hardware Memory Allocation (MB)</h3>
+                    <div id="chart-hardware" class="w-full flex-1"></div>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-6 shrink-0 h-96">
+                <!-- Cpu & GPU Plot -->
+                <div class="glass-panel p-4 flex flex-col relative h-full">
+                    <h3 class="text-sm font-semibold text-textPrimary absolute top-4 left-4 z-10 uppercase tracking-widest">Compute Utilization (%)</h3>
+                    <div id="chart-compute" class="w-full flex-1"></div>
+                </div>
+                
+                <!-- Token Velocity Plot -->
+                <div class="glass-panel p-4 flex flex-col relative h-full">
+                    <h3 class="text-sm font-semibold text-textPrimary absolute top-4 left-4 z-10 uppercase tracking-widest">Agent Inference Velocity (ms / step)</h3>
+                    <div id="chart-velocity" class="w-full flex-1"></div>
+                </div>
+            </div>
+            <div class="h-10 shrink-0"></div>
+        </div>
+
+        <!-- Tab 2: LIVE FEED (Mirrored from sink) -->
+        <div x-show="activeTab === 'live'" x-cloak class="flex-1 flex gap-6 h-full min-h-0">
+            <!-- Messages Column -->
+            <div class="flex-1 flex flex-col min-h-0 glass-panel shadow-2xl overflow-hidden">
+                <div class="p-4 border-b border-white/5 bg-white/5 font-semibold text-sm uppercase tracking-wider text-textSecondary flex items-center justify-between">
+                    <span>Message Stream</span>
+                </div>
+                <div id="message-container" class="flex-1 overflow-y-auto p-4 space-y-4">
+                    <div id="msg-placeholder" class="text-center text-textSecondary text-sm py-10 opacity-50 italic rounded-lg border border-dashed border-white/10 m-2">
+                        Awaiting orchestrated events...
+                    </div>
+                </div>
+            </div>
+
+            <!-- Lateral Sidebar for Traces/Steps -->
+            <div class="w-96 flex flex-col gap-6 shrink-0 min-h-0">
+                <!-- Agent Steps -->
+                <div class="flex-1 flex flex-col min-h-0 glass-panel overflow-hidden">
+                    <div class="p-3 border-b border-white/5 bg-white/5 font-semibold text-xs uppercase tracking-wider text-textSecondary">
+                        Agent Steps
+                    </div>
+                    <div id="step-container" class="flex-1 overflow-y-auto p-3 space-y-3"></div>
+                </div>
+
+                <!-- LLM Calls -->
+                <div class="flex-1 flex flex-col min-h-0 glass-panel overflow-hidden">
+                    <div class="p-3 border-b border-white/5 bg-white/5 font-semibold text-xs uppercase tracking-wider text-textSecondary">
+                        LLM Calls
+                    </div>
+                    <div id="llm-container" class="flex-1 overflow-y-auto p-3 space-y-3"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab 3: Protocol Diagram -->
+        <div x-show="activeTab === 'protocol'" x-cloak class="flex-1 flex flex-col h-full min-h-0">
+            <div class="flex-1 glass-panel shadow-2xl overflow-y-auto p-6 flex flex-col items-center">
+                <div class="text-textSecondary text-sm mb-4 bg-white/5 px-4 py-2 rounded-full hidden" id="diagram-hint">Diagram dynamically updates as messages are sent.</div>
+                <div id="mermaid-output" class="w-full h-full flex justify-center mt-4 bg-[#0B0F19] rounded-xl border border-white/5 pt-10">
+                    <div class="text-center text-textSecondary text-sm py-20 opacity-50 italic">
+                        Awaiting protocol interactions...
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Scripting and ApexCharts Initialization -->
+    <script>
+        // Global Datastores
+        const csvLog = [];
+        let mermaidSrc = "sequenceDiagram\nautonumber\n";
+        let hasMermaidData = false;
+
+        // ApexCharts configs
+        const chartOptions = {
+            chart: { type: 'area', height: '100%', animations: { enabled: false }, toolbar: { show: false }, background: 'transparent' },
+            theme: { mode: 'dark' },
+            stroke: { curve: 'smooth', width: 2 },
+            dataLabels: { enabled: false },
+            grid: { borderColor: 'rgba(255,255,255,0.05)', strokeDashArray: 4 },
+            xaxis: { type: 'datetime', labels: { style: { colors: '#94A3B8' } }, axisBorder: { show: false }, axisTicks: { show: false } },
+            yaxis: { labels: { style: { colors: '#94A3B8' } } },
+        };
+
+        const memChart = new ApexCharts(document.querySelector("#chart-hardware"), {
+            ...chartOptions,
+            colors: ['#8B5CF6', '#3B82F6'],
+            fill: { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.4, opacityTo: 0.05, stops: [0, 100] } },
+            series: [{ name: 'VRAM Used', data: [] }, { name: 'RAM Used', data: [] }]
+        });
+        
+        const computeChart = new ApexCharts(document.querySelector("#chart-compute"), {
+            ...chartOptions,
+            colors: ['#F59E0B', '#10B981'],
+            yaxis: { max: 100, min: 0, labels: { style: { colors: '#94A3B8' } } },
+            fill: { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.4, opacityTo: 0.05, stops: [0, 100] } },
+            series: [{ name: 'GPU util %', data: [] }, { name: 'CPU util %', data: [] }]
+        });
+
+        const velocityChart = new ApexCharts(document.querySelector("#chart-velocity"), {
+            ...chartOptions,
+            chart: { type: 'bar', height: '100%', animations: { enabled: false }, toolbar: { show: false } },
+            colors: ['#EF4444'],
+            series: [{ name: 'LLM Latency (ms)', data: [] }]
+        });
+
+        memChart.render();
+        computeChart.render();
+        velocityChart.render();
+
+        window.renderMermaidUI = function() {
+            if (hasMermaidData) {
+                document.getElementById('diagram-hint').classList.remove('hidden');
+                let el = document.getElementById('mermaid-output');
+                mermaid.render('mermaid-svg', mermaidSrc).then((r) => {
+                    el.innerHTML = r.svg;
+                }).catch(e => console.error("Mermaid Render", e));
+            }
+        };
+
+        window.downloadCSV = function() {
+            if (csvLog.length === 0) return alert("No telemetry data yet.");
+            const header = "Timestamp,Event,Agent/Sender,Receiver,Tokens,Duration_ms,Info\n";
+            const rows = csvLog.map(r => `"${r.ts}","${r.event}","${r.sender}","${r.receiver}","${r.tokens}","${r.duration}","${r.info}"`).join("\n");
+            const blob = new Blob([header + rows], { type: 'text/csv' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `orchestrator_telemetry_${new Date().getTime()}.csv`;
+            link.click();
+        };
+
+        let memDataVRAM = []; let memDataRAM = [];
+        let compDataGPU = []; let compDataCPU = [];
+        let velData = [];
+
+        // Observe the hidden HTMX sink and dispatch to correct UI
+        const sink = document.getElementById('sse-sink');
+        const observer = new MutationObserver((mutations) => {
+            let alpineData = document.querySelector('body')._x_dataStack[0];
+            let hwUpdated = false;
+            let velUpdated = false;
+            
+            mutations.forEach((m) => {
+                m.addedNodes.forEach(node => {
+                    if (!node.classList || !node.classList.contains('sse-event-block')) return;
+                    
+                    let eventType = node.getAttribute('data-event');
+                    let now = new Date().getTime();
+
+                    // Remove from sink to prevent memory bloat, clone it to visible UI
+                    let clone = node.cloneNode(true);
+                    
+                    if (eventType === 'message') {
+                        document.getElementById('message-container').appendChild(clone);
+                        document.getElementById('msg-placeholder')?.remove();
+                        // Autoscroll
+                        let c = document.getElementById('message-container');
+                        c.scrollTo({ top: c.scrollHeight, behavior: 'smooth' });
+                        
+                        let sender = node.getAttribute('data-sender') || 'Unknown';
+                        let receiver = node.getAttribute('data-receiver') || 'Unknown';
+                        csvLog.push({ ts: new Date().toISOString(), event: 'message', sender, receiver, tokens: '', duration: '', info: 'Message sent' });
+
+                        let sName = sender.replace(/[^a-zA-Z0-9_]/g, "_");
+                        let rName = receiver.replace(/[^a-zA-Z0-9_]/g, "_");
+                        mermaidSrc += `${sName}->>${rName}: Message\n`;
+                        hasMermaidData = true;
+                        if (alpineData.activeTab === 'protocol') window.renderMermaidUI();
+                    } 
+                    else if (eventType === 'llm_call') {
+                        document.getElementById('llm-container').prepend(clone);
+                        
+                        let tokens = parseInt(node.getAttribute('data-tokens') || '0', 10);
+                        let duration = parseFloat(node.getAttribute('data-duration') || '0');
+                        alpineData.totalTokens += tokens;
+                        alpineData.totalDuration += duration;
+                        
+                        velData.push({ x: now, y: duration.toFixed(0) });
+                        if (velData.length > 50) velData.shift();
+                        velUpdated = true;
+
+                        // Telemetry extraction
+                        // Wait, agent_name is not in data attributes on llm_call. Let's dig it from inner HTML visually...
+                        let textBlock = node.innerText.replace(/\n/g, " | ");
+                        csvLog.push({ ts: new Date().toISOString(), event: 'llm_call', sender: 'LLM', receiver: '', tokens, duration, info: textBlock.substring(0, 50) });
+                    } 
+                    else if (eventType === 'agent_step') {
+                        document.getElementById('step-container').prepend(clone);
+                        alpineData.stepCount += 1;
+                        csvLog.push({ ts: new Date().toISOString(), event: 'agent_step', sender: 'Agent', receiver: '', tokens: '', duration: '', info: 'Step completed' });
+                    }
+                    else if (eventType === 'system_stats') {
+                        let payload = JSON.parse(node.getAttribute('data-payload') || '{}');
+                        
+                        memDataVRAM.push({ x: now, y: payload.vram_used_mb });
+                        memDataRAM.push({ x: now, y: payload.ram_used_mb });
+                        compDataGPU.push({ x: now, y: payload.gpu_utilization_percent });
+                        compDataCPU.push({ x: now, y: Math.round(payload.cpu_usage_percent) });
+
+                        if (memDataVRAM.length > 60) { memDataVRAM.shift(); memDataRAM.shift(); }
+                        if (compDataGPU.length > 60) { compDataGPU.shift(); compDataCPU.shift(); }
+                        hwUpdated = true;
+                    }
+                    
+                    // We remove the node from sink!
+                    node.remove();
+                });
+            });
+
+            // Batch chart updates
+            if (hwUpdated && alpineData.activeTab === 'dashboard') {
+                memChart.updateSeries([{ data: memDataVRAM }, { data: memDataRAM }]);
+                computeChart.updateSeries([{ data: compDataGPU }, { data: compDataCPU }]);
+            }
+            if (velUpdated && alpineData.activeTab === 'dashboard') {
+                velocityChart.updateSeries([{ data: velData }]);
+            }
+        });
+        
+        observer.observe(sink, { childList: true });
+    </script>
+</body>
+</html>

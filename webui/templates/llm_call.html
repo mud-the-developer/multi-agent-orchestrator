@@ -1,0 +1,16 @@
+<div class="p-3 rounded-lg border border-white/5 bg-gradient-to-br from-white/5 to-transparent animate-fade-in text-sm flex flex-col gap-2 sse-event-block" data-event="llm_call" data-tokens="{{ total_tokens }}" data-duration="{{ duration_numeric }}">
+    <div class="flex items-center justify-between">
+        <div class="flex items-center gap-1.5">
+            <svg class="w-3.5 h-3.5 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+            <span class="font-medium text-textPrimary text-xs uppercase">{{ agent_name }}</span>
+        </div>
+        <div class="flex items-center gap-2 text-xs font-mono text-textSecondary">
+            <span>{{ total_tokens }} t</span>
+            <span class="text-white/20">|</span>
+            <span>{{ duration_str }}</span>
+        </div>
+    </div>
+    <div class="px-2 py-1.5 bg-black/30 rounded border border-white/5 text-xs text-textSecondary whitespace-pre-wrap font-mono max-h-64 overflow-y-auto custom-scrollbar">
+        {{ output_preview }}
+    </div>
+</div>

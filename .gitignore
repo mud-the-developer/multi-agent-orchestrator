@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.env
+.venv
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Environment / Secrets
+.env
+config.json
+
+# Rust (webui)
+webui/target/
+**/*.rs.bk
+
+# Orchestration output
+trace_output*/
+*.log
+*.csv
+
+# OS
+.DS_Store
+Thumbs.db

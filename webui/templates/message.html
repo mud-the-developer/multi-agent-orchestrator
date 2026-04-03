@@ -1,0 +1,14 @@
+<div class="p-4 rounded-xl relative animate-fade-in sse-event-block {% if sender == "user" %} bg-primary/10 border border-primary/20 mr-12 {% else %} bg-white/5 border border-white/10 ml-12 {% endif %}" data-event="message" data-sender="{{ sender }}" data-receiver="{{ receiver }}">
+    <div class="flex items-center justify-between mb-2">
+        <div class="flex items-center gap-2">
+            <span class="font-bold text-sm {% if sender == "user" %} text-primary {% else %} text-accent {% endif %}">
+                {{ sender }}
+            </span>
+            <span class="text-xs text-textSecondary px-2 py-0.5 rounded-full bg-white/5">
+                to: {{ receiver }}
+            </span>
+        </div>
+        <span class="text-xs text-white/40 font-mono bg-black/20 px-2 py-0.5 rounded-full">{{ message_type }}</span>
+    </div>
+    <div class="text-sm text-textPrimary leading-relaxed whitespace-pre-wrap font-mono mt-2 max-h-96 overflow-y-auto custom-scrollbar">{{ content }}</div>
+</div>

@@ -1,0 +1,7 @@
+<div class="p-3 rounded-lg border border-white/5 bg-white/5 animate-fade-in text-sm relative overflow-hidden group sse-event-block" data-event="agent_step">
+    <div class="absolute inset-y-0 left-0 w-1 {% if success %} bg-emerald-500 {% else %} bg-rose-500 {% endif %} opacity-50 group-hover:opacity-100 transition-opacity"></div>
+    <div class="flex items-center justify-between pl-2">
+        <span class="font-medium text-textPrimary">{{ agent_name }} step</span>
+        <span class="text-xs text-textSecondary font-mono">{{ duration_str }}</span>
+    </div>
+</div>
