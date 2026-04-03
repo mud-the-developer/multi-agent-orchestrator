@@ -1,5 +1,7 @@
 # Multi-Agent Orchestration System & Real-Time WebUI
 
+[🇰🇷 한국어 버전 (Korean)](README_ko.md)
+
 This project features a multi-agent AI orchestration pipeline (using models like Gemma) paired with a highly specialized **Real-Time Analytics & Hardware Monitoring Web UI** built in Rust.
 
 ## 🌟 Key Features
