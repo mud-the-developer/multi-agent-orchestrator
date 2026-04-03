@@ -25,7 +25,7 @@
 2. **개발 환경 구축 (단일 명령어 실행)**:
    ```bash
    # 필요한 Python, Rust 버전을 설치하고 .venv 구성 및 의존성을 모두 자동 설치합니다.
-   mise run install
+   mise run setup
    ```
 
 ## 🚀 실행 구동 가이드
